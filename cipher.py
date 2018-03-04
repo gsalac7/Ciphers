@@ -27,7 +27,6 @@ class Playfair():
         self.key = str(key)
         self.symbols = string.ascii_lowercase
 
-
     def removeUnique(self, string):
         remove = list(string)
         for char in range(len(remove) - 1):
@@ -81,17 +80,53 @@ class Playfair():
     def encryptPair(self, pair):
         print 'SOMETHING'
 
-#TODO start on vigenere cipher
+# vigenere done
 class Vigenere():
-    def __init__(self, key):
-        self.key = int(key)
+    def __init__(self, key, symbols):
+        self.key = key.lower()
+        self.symbols = symbols
 
     def encrypt(self, plainText):
-        print 'something'
+        self.plainText = plainText.lower()
+        self.plainText = self.plainText.replace(' ','')
+        keyIndex = 0
+        cipherText = ''
+        for char in self.plainText:
+            num = self.symbols.find(char)
+            num += self.symbols.find(self.key[keyIndex])
 
+            if num > ord('z'):
+                num += 26
+            elif num < ord('a'):
+                num -= 26
+
+            cipherText += self.symbols[num]
+
+            keyIndex += 1
+            if keyIndex == len(self.key):
+                keyIndex = 0
+
+        return cipherText
 
     def decrypt(self, cipherText):
-        print 'something '
+        self.cipherText = cipherText.lower()
+        self.cipherText = self.cipherText.replace(' ','')
+        keyIndex = 0
+        plainText = ''
+        for char in self.cipherText:
+            num = self.symbols.find(char)
+            num -= self.symbols.find(self.key[keyIndex])
+
+            num %= len(self.symbols)
+
+            plainText += self.symbols[num]
+
+            keyIndex += 1
+            if keyIndex == len(self.key):
+                keyIndex = 0
+
+        print plainText
+        return plainText
 
 # Row Transposition Done
 class Transposition():
@@ -165,7 +200,7 @@ class Transposition():
 
         return plainText
 
-#TODO decrypt function, encrypt works
+# RAIL FENCE....DONEZO
 class RailFence():
     def __init__(self, key):
         self.key = int(key)
@@ -173,64 +208,56 @@ class RailFence():
     def encrypt(self, plainText):
         self.plainText = plainText.lower()
         self.plainText = self.plainText.replace(' ','')
+        cipherText = ''
         table = []
         for i in range(self.key):
             table.append('')
-        i = 0
-        while i < len(self.plainText):
+        for i in range(len(self.plainText)):
             table[i % self.key] += self.plainText[i]
-            i += 1
-        cipherText = ''.join(table)
+            print table
+        for i in range(len(table)):
+            cipherText += table[i]
         return cipherText
 
     def decrypt(self, cipherText):
         self.cipherText = cipherText
         value = len(self.cipherText)%self.key
-        # the amount of rows
+        # base amount of rows
         row_length = len(self.cipherText)/self.key
-
+        print len(self.cipherText)
         row_start = 0
         table = []
-
-        if value == 0:
-            while value != 0:
-                row_end = row_length + 1
-                for i in range(self.key):
-                    table.append('')
-                    table[i] = self.cipherText[row_start:row_end]
-                    row_start = row_end
-                    row_end += row_length
+        row_end = 0
+        for i in range(self.key):
+            if value > 0:
+                row_end += row_length + 1
                 value -= 1
-        else:
-            row_end = row_length + value
-            for i in range(self.key):
-                table.append('')
-                table[i] = self.cipherText[row_start:row_end]
-                row_start = row_end
+            else:
                 row_end += row_length
+            table.append('')
+            table[i] += self.cipherText[row_start:row_end]
+            row_start = row_end
 
         print table
-
-        '''
-        i = 0
+        # actually buid the plainText now
         plainText = ''
+        j = 0
         while len(plainText) != len(self.cipherText):
-            for item in table:
-                if i < len(item):
-                    plainText += table[i]
-            i += 1
-        '''
-        #return plaintext
+            for i in range(len(table)):
+                plainText += table[i][j]
+                if len(plainText) == len(self.cipherText):
+                    break
+            j += 1
+
+        return plainText
 
 def main():
     # for caesar cipher
     symbols = string.ascii_lowercase
 
-    sample = RailFence(3)
-    plainText = 'hello worlds'
-    cipherText = sample.encrypt(plainText)
-    print cipherText
-    sample.decrypt(cipherText)
+    sample = Playfair('monarcy')
+    plainText = 'hello world'
+    sample.createPairs(plainText)
 
 
 if __name__=='__main__':
