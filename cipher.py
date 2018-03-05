@@ -21,64 +21,185 @@ class Caesar():
         return plainText
 
 
-#TODO start on playfair cipher
+#Playfair Cipher.....DONE
 class Playfair():
     def __init__(self, key):
         self.key = str(key)
         self.symbols = string.ascii_lowercase
+        self.symbols = list(self.symbols)
 
-    def removeUnique(self, string):
-        remove = list(string)
-        for char in range(len(remove) - 1):
-            i = 1
-            while i <= (len(remove) - 1):
-                if remove[char] == remove[i]:
-                    del remove[i]
-                i += 1
+    def removeUnique(self):
+        # handle the case of i/j being the same
+        if 'i' in self.key:
+            self.symbols.remove('j')
+        if 'j' in self.key:
+            self.symbols.remove('i')
+        if 'i' and 'j' in self.symbols:
+            self.symbols.remove('j')
+        alphabet = ''.join(self.symbols)
+        self.string = self.key + alphabet
+        self.string = list(self.string)
+        output = []
+        seen = set()
+        for char in self.string:
+            if char not in seen:
+                output.append(char)
+                seen.add(char)
 
-        return str(remove)
-    #makes the matrix based on the key
-    def makeMatrix(self):
-        matrix = self.key
-        matrix = self.removeUnique(matrix)
-        for characters in self.symbols:
-            # we will just ignore j
-            if characters == 'j':
-                continue
-            if characters not in matrix:
-                matrix += characters
+        return output
 
-        list(matrix)
-        print matrix
-        matrix1 = matrix[0:5]
-        matrix2 = matrix[6:10]
-        matrix3 = matrix[11:15]
-        matrix4 = matrix[16:20]
-        matrix5 = matrix[21:25]
-        print matrix1
-        print matrix2
-        print matrix3
-        print matrix4
-        print matrix5
+    def createMatrix(self):
+        self.string = self.removeUnique()
+        #create 5x5 matrix
+        matrix = []
+        i = 0
+        while i < 25:
+            matrix.append(self.string[i:i+5])
+            i += 5
+        return matrix
 
-
-    # the text can be both the ciphertext and the plaintext
-    def createPairs(self, text):
-        text = text.lower()
-        text = text.replace(' ','')
+    def createPairs(self, plainText):
+        self.plainText = plainText.lower()
+        self.plainText = plainText.replace(' ','')
         pairs = []
-        i = 0;
-        while i < len(text) - 1:
-            if text[i] != text[i+1]:
-                pairs.append((text[i], text[i+1]))
+        self.plainText = list(self.plainText)
+
+        i = 0
+        while i < len(self.plainText) - 1:
+            if self.plainText[i + 1] == self.plainText[i]:
+                self.plainText.insert(i + 1, 'x')
                 i += 2
             else:
-                pairs.append((text[i], 'x'))
                 i += 1
-        print pairs
+        pairs = [self.plainText[i:i + 2] for i in xrange(0, len(self.plainText), 2)]
+        if len(pairs[len(pairs) - 1]) == 1:
+            pairs[len(pairs) - 1].append('x')
+        return pairs
 
-    def encryptPair(self, pair):
-        print 'SOMETHING'
+    def encrypt(self, plainText):
+        self.pairs = self.createPairs(plainText)
+        self.matrix = self.createMatrix()
+
+        pairs = self.pairs
+        matrix = self.matrix
+
+        print pairs
+        print matrix
+
+        cipherText = []
+        value1 = 0
+        value2 = 0
+        temp_list1 = []
+        temp_list2 = []
+
+        for pair in self.pairs:
+            for row in matrix:
+                if pair[0] in row:
+                    temp_list1 = row
+                if pair[1] in row:
+                    temp_list2 = row
+            for index in range(len(temp_list1)):
+                if pair[0] == temp_list1[index]:
+                    value1 = index
+            for index in range(len(temp_list2)):
+                if pair[1] == temp_list2[index]:
+                    value2 = index
+
+            # what if they are in the same row
+            if temp_list1 == temp_list2:
+                if value1 != 4: # move one to the right
+                    value1 += 1
+                else:
+                    value1 = 0
+                if value2 != 4:
+                    value2 += 1
+                else:
+                    value2 = 0
+
+            # what if they are in the same column
+            if value1 == value2:
+                index = 0
+                while index < len(matrix):
+                    if temp_list1 == matrix[index]:
+                        if index == 0:
+                            temp_list1 = matrix[4]
+                        else:
+                            index -= 1
+                            temp_list1 = matrix[index]
+                    if temp_list2 == matrix[index]:
+                        if index == 0:
+                            temp_list2 = matrix[4]
+                        else:
+                            index -= 1
+                            temp_list2 == matrix[index]
+                    index += 1
+
+
+            cipherText += temp_list1[value2]
+            cipherText += temp_list2[value1]
+
+        return ''.join(cipherText)
+
+
+    def decrypt(self, cipherText):
+        self.pairs = self.createPairs(cipherText)
+        self.matrix = self.createMatrix()
+
+        pairs = self.pairs
+        matrix = self.matrix
+
+        plainText = []
+        value1 = 0
+        value2 = 0
+        temp_list1 = []
+        temp_list2 = []
+
+        for pair in self.pairs:
+            for row in matrix:
+                if pair[0] in row:
+                    temp_list1 = row
+                if pair[1] in row:
+                    temp_list2 = row
+            for index in range(len(temp_list1)):
+                if pair[0] == temp_list1[index]:
+                    value1 = index
+            for index in range(len(temp_list2)):
+                if pair[1] == temp_list2[index]:
+                    value2 = index
+
+            # what if they are in the same row
+            if temp_list1 == temp_list2:
+                if value1 != 0: # move one to the left
+                    value1 -= 1
+                else:
+                    value1 = 4
+                if value2 != 0:
+                    value2 -= 1
+                else:
+                    value2 = 4
+
+            # what if they are in the same column
+            if value1 == value2:
+                index = 0 # go below one
+                while index < len(matrix):
+                    if temp_list1 == matrix[index]:
+                        if index == 4:
+                            temp_list1 = matrix[0]
+                        else:
+                            index += 1
+                            temp_list1 = matrix[index]
+                    if temp_list2 == matrix[index]:
+                        if index == 4:
+                            temp_list2 = matrix[0]
+                        else:
+                            index += 1
+                            temp_list2 == matrix[index]
+                    index += 1
+
+            plainText += temp_list1[value2]
+            plainText += temp_list2[value1]
+
+        return ''.join(plainText)
 
 # vigenere done
 class Vigenere():
@@ -125,7 +246,6 @@ class Vigenere():
             if keyIndex == len(self.key):
                 keyIndex = 0
 
-        print plainText
         return plainText
 
 # Row Transposition Done
@@ -255,9 +375,10 @@ def main():
     # for caesar cipher
     symbols = string.ascii_lowercase
 
-    sample = Playfair('monarcy')
+    sample = Playfair('monarchy')
     plainText = 'hello world'
-    sample.createPairs(plainText)
+    cipherText = sample.encrypt(plainText)
+    sample.decrypt(cipherText)
 
 
 if __name__=='__main__':
