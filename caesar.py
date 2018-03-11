@@ -9,15 +9,28 @@ class Caesar():
     def encrypt(self, plainText):
         self.plainText = plainText.replace(' ','')
         self.plainText = self.plainText.lower()
-        cipherText = self.alphabet[self.key:] + self.alphabet[:self.key]
-        table = string.maketrans(self.alphabet, cipherText)
-        cipherText = plainText.translate(table)
+        cipherText = ''
+        for char in self.plainText:
+            num = ord(char)
+            num += self.key
+            if num > ord('z'):
+                num -= 26
+            elif num < ord('a'):
+                num += 26
+            cipherText += chr(num)
+        cipherText = cipherText[0:len(cipherText)-1]
         return cipherText
 
     def decrypt(self, cipherText):
         self.cipherText = cipherText.replace(' ','')
+        plainText = ''
         key = -self.key
-        plainText = self.alphabet[key:] + self.alphabet[:key]
-        table = string.maketrans(self.alphabet, plainText)
-        plainText = cipherText.translate(table)
+        for char in self.cipherText:
+            num = ord(char)
+            num += key
+            if num > ord('z'):
+                num -= 26
+            elif num < ord('a'):
+                num += 26
+            plainText += chr(num)
         return plainText
